@@ -33,8 +33,12 @@ class ToolTipWidget extends StatefulWidget {
   final Size? screenSize;
   final String? title;
   final String? description;
+  final TextSpan? body;
+  final String? cta;
   final TextStyle? titleTextStyle;
   final TextStyle? descTextStyle;
+  final TextStyle? ctaTextStyle;
+  final double? maxTooltipWidth;
   final Widget? container;
   final Color? tooltipColor;
   final Color? textColor;
@@ -52,8 +56,12 @@ class ToolTipWidget extends StatefulWidget {
     required this.screenSize,
     required this.title,
     required this.description,
+    this.body,
+    this.cta,
     required this.titleTextStyle,
     required this.descTextStyle,
+    this.ctaTextStyle,
+    this.maxTooltipWidth,
     required this.container,
     required this.tooltipColor,
     required this.textColor,
@@ -110,6 +118,11 @@ class _ToolTipWidgetState extends State<ToolTipWidget>
             .textTheme
             .subtitle2!
             .merge(TextStyle(color: widget.textColor));
+    final ctaStyle = widget.ctaTextStyle ??
+        Theme.of(context)
+            .textTheme
+            .subtitle2!
+            .merge(TextStyle(color: widget.textColor));
     final titleLength = widget.title == null
         ? 0
         : _textSize(widget.title!, titleStyle).width +
@@ -119,7 +132,22 @@ class _ToolTipWidgetState extends State<ToolTipWidget>
         _textSize(widget.description!, descriptionStyle).width +
             widget.contentPadding!.right +
             widget.contentPadding!.left;
-    var maxTextWidth = max(titleLength, descriptionLength);
+    final bodyLength = widget.body == null
+        ? 0
+        : _textSpanSize(widget.body!).width +
+            widget.contentPadding!.right +
+            widget.contentPadding!.left;
+    final ctaLength = widget.cta == null
+        ? 0
+        : _textSize(widget.cta!, ctaStyle).width +
+            widget.contentPadding!.right +
+            widget.contentPadding!.left;
+    var maxTextWidth =
+        [titleLength, descriptionLength, bodyLength, ctaLength].reduce(max);
+    if (widget.maxTooltipWidth != null && 
+        maxTextWidth > widget.maxTooltipWidth! - 20) {
+      return widget.maxTooltipWidth! - 20;
+    }
     if (maxTextWidth > widget.screenSize!.width - 20) {
       return widget.screenSize!.width - 20;
     } else {
@@ -310,7 +338,7 @@ class _ToolTipWidgetState extends State<ToolTipWidget>
                               crossAxisAlignment: CrossAxisAlignment.center,
                               children: <Widget>[
                                 Column(
-                                  crossAxisAlignment: widget.title != null
+                                  crossAxisAlignment: widget.cta != null
                                       ? CrossAxisAlignment.start
                                       : CrossAxisAlignment.center,
                                   children: <Widget>[
@@ -328,18 +356,34 @@ class _ToolTipWidgetState extends State<ToolTipWidget>
                                                     ),
                                           )
                                         : SizedBox(),
-                                    Text(
-                                      widget.description!,
-                                      style: widget.descTextStyle ??
-                                          Theme.of(context)
-                                              .textTheme
-                                              .subtitle2!
-                                              .merge(
-                                                TextStyle(
-                                                  color: widget.textColor,
-                                                ),
-                                              ),
-                                    ),
+                                    widget.body == null
+                                        ? Text(
+                                            widget.description!,
+                                            style: widget.descTextStyle ??
+                                                Theme.of(context)
+                                                    .textTheme
+                                                    .subtitle2!
+                                                    .merge(TextStyle(
+                                                        color: widget.textColor)),
+                                          )
+                                        : Container(),
+                                    widget.body != null
+                                        ? RichText(text: widget.body!)
+                                        : Container(),
+                                    widget.cta != null
+                                        ? Padding(
+                                          padding: const EdgeInsets.only(top: 24),
+                                          child: Text(
+                                            widget.cta!,
+                                            style: widget.ctaTextStyle ??
+                                                Theme.of(context)
+                                                    .textTheme
+                                                    .subtitle2!
+                                                    .merge(TextStyle(
+                                                        color:
+                                                            widget.textColor)),
+                                          ))
+                                        : Container(),
                                   ],
                                 )
                               ],
@@ -405,6 +449,17 @@ class _ToolTipWidgetState extends State<ToolTipWidget>
   Size _textSize(String text, TextStyle style) {
     final textPainter = (TextPainter(
             text: TextSpan(text: text, style: style),
+            maxLines: 1,
+            textScaleFactor: MediaQuery.of(context).textScaleFactor,
+            textDirection: TextDirection.ltr)
+          ..layout())
+        .size;
+    return textPainter;
+  }
+
+  Size _textSpanSize(TextSpan textSpan) {
+    final textPainter = (TextPainter(
+            text: textSpan,
             maxLines: 1,
             textScaleFactor: MediaQuery.of(context).textScaleFactor,
             textDirection: TextDirection.ltr)

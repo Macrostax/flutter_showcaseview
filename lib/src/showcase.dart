@@ -39,10 +39,14 @@ class Showcase extends StatefulWidget {
   final Widget child;
   final String? title;
   final String? description;
+  final TextSpan? body;
+  final String? cta;
   final ShapeBorder? shapeBorder;
   final BorderRadius? radius;
   final TextStyle? titleTextStyle;
   final TextStyle? descTextStyle;
+  final TextStyle? ctaTextStyle;
+  final double? maxTooltipWidth;
   final EdgeInsets contentPadding;
   final Color overlayColor;
   final double overlayOpacity;
@@ -73,11 +77,15 @@ class Showcase extends StatefulWidget {
     required this.child,
     this.title,
     required this.description,
+    this.body,
+    this.cta,
     this.shapeBorder,
     this.overlayColor = Colors.black45,
     this.overlayOpacity = 0.75,
     this.titleTextStyle,
     this.descTextStyle,
+    this.maxTooltipWidth,
+    this.ctaTextStyle,
     this.showcaseBackgroundColor = Colors.white,
     this.textColor = Colors.black,
     this.scrollLoadingWidget = const CircularProgressIndicator(
@@ -117,12 +125,16 @@ class Showcase extends StatefulWidget {
     required this.width,
     this.title,
     this.description,
+    this.body,
+    this.cta,
     this.shapeBorder,
     this.overlayColor = Colors.black45,
     this.radius,
     this.overlayOpacity = 0.75,
     this.titleTextStyle,
     this.descTextStyle,
+    this.ctaTextStyle,
+    this.maxTooltipWidth,
     this.showcaseBackgroundColor = Colors.white,
     this.textColor = Colors.black,
     this.scrollLoadingWidget = const CircularProgressIndicator(
@@ -169,7 +181,7 @@ class _ShowcaseState extends State<Showcase> {
       _showShowCase = activeStep == widget.key;
     });
 
-    if (activeStep == widget.key) {
+    if (activeStep == widget.key && !widget.disableAnimation) {
       _scrollIntoView();
       if (ShowCaseWidget.of(context)!.autoPlay) {
         timer = Timer(
@@ -238,8 +250,9 @@ class _ShowcaseState extends State<Showcase> {
   void _getOnTooltipTap() {
     if (widget.disposeOnTap == true) {
       ShowCaseWidget.of(context)!.dismiss();
+    } else {
+      (widget.onToolTipClick ?? _nextIfAny).call();
     }
-    widget.onToolTipClick?.call();
   }
 
   Widget buildOverlayOnTarget(
@@ -309,8 +322,12 @@ class _ShowcaseState extends State<Showcase> {
                   screenSize: screenSize,
                   title: widget.title,
                   description: widget.description,
+                  body: widget.body,
+                  cta: widget.cta,
                   titleTextStyle: widget.titleTextStyle,
                   descTextStyle: widget.descTextStyle,
+                  ctaTextStyle: widget.ctaTextStyle,
+                  maxTooltipWidth: widget.maxTooltipWidth,
                   container: widget.container,
                   tooltipColor: widget.showcaseBackgroundColor,
                   textColor: widget.textColor,
